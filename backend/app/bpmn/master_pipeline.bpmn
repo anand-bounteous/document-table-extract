@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  id="Definitions_master_pipeline"
+  targetNamespace="http://sof-table-extract"
+  exporter="sof-table-extract" exporterVersion="0.2">
+
+  <bpmn:process id="master_pipeline" name="SOF Table Extraction — Master Pipeline" isExecutable="true">
+    <bpmn:inclusiveGateway id="gw_split_native_pdf" name="" gatewayDirection="Diverging"/>
+    <bpmn:sequenceFlow id="flow_StartEvent_master_gw_split_native_pdf" sourceRef="StartEvent_master" targetRef="gw_split_native_pdf"/>
+    <bpmn:task id="pymupdf_native" name="Pymupdf Native"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>pymupdf_native</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_native_pdf_pymupdf_native" sourceRef="gw_split_native_pdf" targetRef="pymupdf_native"/>
+    <bpmn:sequenceFlow id="flow_pymupdf_native_gw_join_native_pdf" sourceRef="pymupdf_native" targetRef="gw_join_native_pdf"/>
+    <bpmn:task id="pdfplumber_native" name="Pdfplumber Native"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>pdfplumber_native</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_native_pdf_pdfplumber_native" sourceRef="gw_split_native_pdf" targetRef="pdfplumber_native"/>
+    <bpmn:sequenceFlow id="flow_pdfplumber_native_gw_join_native_pdf" sourceRef="pdfplumber_native" targetRef="gw_join_native_pdf"/>
+    <bpmn:sequenceFlow id="flow_gw_split_native_pdf_skip2_gw_join_native_pdf" name="skip" sourceRef="gw_split_native_pdf" targetRef="gw_join_native_pdf"/>
+    <bpmn:inclusiveGateway id="gw_join_native_pdf" name="" gatewayDirection="Converging"/>
+    <bpmn:inclusiveGateway id="gw_split_preprocessing" name="" gatewayDirection="Diverging"/>
+    <bpmn:sequenceFlow id="flow_gw_join_native_pdf_gw_split_preprocessing" sourceRef="gw_join_native_pdf" targetRef="gw_split_preprocessing"/>
+    <bpmn:task id="preprocess_opencv" name="Preprocess Opencv"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>preprocess_opencv</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="layout_ruled_table" name="Layout Ruled Table"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>layout_ruled_table</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_preprocessing_preprocess_opencv" sourceRef="gw_split_preprocessing" targetRef="preprocess_opencv"/>
+    <bpmn:sequenceFlow id="flow_preprocess_opencv_layout_ruled_table" sourceRef="preprocess_opencv" targetRef="layout_ruled_table"/>
+    <bpmn:sequenceFlow id="flow_layout_ruled_table_gw_join_preprocessing" sourceRef="layout_ruled_table" targetRef="gw_join_preprocessing"/>
+    <bpmn:sequenceFlow id="flow_gw_split_preprocessing_skip1_gw_join_preprocessing" name="skip" sourceRef="gw_split_preprocessing" targetRef="gw_join_preprocessing"/>
+    <bpmn:inclusiveGateway id="gw_join_preprocessing" name="" gatewayDirection="Converging"/>
+    <bpmn:inclusiveGateway id="gw_split_ocr" name="" gatewayDirection="Diverging"/>
+    <bpmn:sequenceFlow id="flow_gw_join_preprocessing_gw_split_ocr" sourceRef="gw_join_preprocessing" targetRef="gw_split_ocr"/>
+    <bpmn:task id="ocr_tesseract" name="Ocr Tesseract"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>ocr_tesseract</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_ocr_ocr_tesseract" sourceRef="gw_split_ocr" targetRef="ocr_tesseract"/>
+    <bpmn:sequenceFlow id="flow_ocr_tesseract_gw_join_ocr" sourceRef="ocr_tesseract" targetRef="gw_join_ocr"/>
+    <bpmn:task id="ocr_easyocr" name="Ocr Easyocr"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>ocr_easyocr</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_ocr_ocr_easyocr" sourceRef="gw_split_ocr" targetRef="ocr_easyocr"/>
+    <bpmn:sequenceFlow id="flow_ocr_easyocr_gw_join_ocr" sourceRef="ocr_easyocr" targetRef="gw_join_ocr"/>
+    <bpmn:task id="ocr_doctr" name="Ocr Doctr"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>ocr_doctr</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_ocr_ocr_doctr" sourceRef="gw_split_ocr" targetRef="ocr_doctr"/>
+    <bpmn:sequenceFlow id="flow_ocr_doctr_gw_join_ocr" sourceRef="ocr_doctr" targetRef="gw_join_ocr"/>
+    <bpmn:task id="ocr_paddleocr" name="Ocr Paddleocr"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>ocr_paddleocr</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_ocr_ocr_paddleocr" sourceRef="gw_split_ocr" targetRef="ocr_paddleocr"/>
+    <bpmn:sequenceFlow id="flow_ocr_paddleocr_gw_join_ocr" sourceRef="ocr_paddleocr" targetRef="gw_join_ocr"/>
+    <bpmn:task id="ocr_trocr" name="Ocr Trocr"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>ocr_trocr</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_ocr_ocr_trocr" sourceRef="gw_split_ocr" targetRef="ocr_trocr"/>
+    <bpmn:sequenceFlow id="flow_ocr_trocr_gw_join_ocr" sourceRef="ocr_trocr" targetRef="gw_join_ocr"/>
+    <bpmn:task id="ocr_deepdoc" name="Ocr Deepdoc"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>ocr_deepdoc</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_ocr_ocr_deepdoc" sourceRef="gw_split_ocr" targetRef="ocr_deepdoc"/>
+    <bpmn:sequenceFlow id="flow_ocr_deepdoc_gw_join_ocr" sourceRef="ocr_deepdoc" targetRef="gw_join_ocr"/>
+    <bpmn:sequenceFlow id="flow_gw_split_ocr_skip6_gw_join_ocr" name="skip" sourceRef="gw_split_ocr" targetRef="gw_join_ocr"/>
+    <bpmn:inclusiveGateway id="gw_join_ocr" name="" gatewayDirection="Converging"/>
+    <bpmn:inclusiveGateway id="gw_split_img2table" name="" gatewayDirection="Diverging"/>
+    <bpmn:sequenceFlow id="flow_gw_join_ocr_gw_split_img2table" sourceRef="gw_join_ocr" targetRef="gw_split_img2table"/>
+    <bpmn:task id="tables_img2table_tesseract" name="Tables Img2Table Tesseract"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_img2table_tesseract</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_img2table_tables_img2table_tesseract" sourceRef="gw_split_img2table" targetRef="tables_img2table_tesseract"/>
+    <bpmn:sequenceFlow id="flow_tables_img2table_tesseract_gw_join_img2table" sourceRef="tables_img2table_tesseract" targetRef="gw_join_img2table"/>
+    <bpmn:task id="tables_img2table_easyocr" name="Tables Img2Table Easyocr"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_img2table_easyocr</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_img2table_tables_img2table_easyocr" sourceRef="gw_split_img2table" targetRef="tables_img2table_easyocr"/>
+    <bpmn:sequenceFlow id="flow_tables_img2table_easyocr_gw_join_img2table" sourceRef="tables_img2table_easyocr" targetRef="gw_join_img2table"/>
+    <bpmn:task id="tables_img2table_doctr" name="Tables Img2Table Doctr"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_img2table_doctr</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_img2table_tables_img2table_doctr" sourceRef="gw_split_img2table" targetRef="tables_img2table_doctr"/>
+    <bpmn:sequenceFlow id="flow_tables_img2table_doctr_gw_join_img2table" sourceRef="tables_img2table_doctr" targetRef="gw_join_img2table"/>
+    <bpmn:task id="tables_img2table_paddle" name="Tables Img2Table Paddle"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_img2table_paddle</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_img2table_tables_img2table_paddle" sourceRef="gw_split_img2table" targetRef="tables_img2table_paddle"/>
+    <bpmn:sequenceFlow id="flow_tables_img2table_paddle_gw_join_img2table" sourceRef="tables_img2table_paddle" targetRef="gw_join_img2table"/>
+    <bpmn:sequenceFlow id="flow_gw_split_img2table_skip4_gw_join_img2table" name="skip" sourceRef="gw_split_img2table" targetRef="gw_join_img2table"/>
+    <bpmn:inclusiveGateway id="gw_join_img2table" name="" gatewayDirection="Converging"/>
+    <bpmn:inclusiveGateway id="gw_split_vector_tables" name="" gatewayDirection="Diverging"/>
+    <bpmn:sequenceFlow id="flow_gw_join_img2table_gw_split_vector_tables" sourceRef="gw_join_img2table" targetRef="gw_split_vector_tables"/>
+    <bpmn:task id="tables_camelot" name="Tables Camelot"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_camelot</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vector_tables_tables_camelot" sourceRef="gw_split_vector_tables" targetRef="tables_camelot"/>
+    <bpmn:sequenceFlow id="flow_tables_camelot_gw_join_vector_tables" sourceRef="tables_camelot" targetRef="gw_join_vector_tables"/>
+    <bpmn:task id="tables_camelot_lattice" name="Tables Camelot Lattice"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_camelot_lattice</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vector_tables_tables_camelot_lattice" sourceRef="gw_split_vector_tables" targetRef="tables_camelot_lattice"/>
+    <bpmn:sequenceFlow id="flow_tables_camelot_lattice_gw_join_vector_tables" sourceRef="tables_camelot_lattice" targetRef="gw_join_vector_tables"/>
+    <bpmn:task id="tables_camelot_stream" name="Tables Camelot Stream"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_camelot_stream</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vector_tables_tables_camelot_stream" sourceRef="gw_split_vector_tables" targetRef="tables_camelot_stream"/>
+    <bpmn:sequenceFlow id="flow_tables_camelot_stream_gw_join_vector_tables" sourceRef="tables_camelot_stream" targetRef="gw_join_vector_tables"/>
+    <bpmn:task id="tables_tabula" name="Tables Tabula"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_tabula</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vector_tables_tables_tabula" sourceRef="gw_split_vector_tables" targetRef="tables_tabula"/>
+    <bpmn:sequenceFlow id="flow_tables_tabula_gw_join_vector_tables" sourceRef="tables_tabula" targetRef="gw_join_vector_tables"/>
+    <bpmn:task id="tables_tabula_lattice" name="Tables Tabula Lattice"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_tabula_lattice</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vector_tables_tables_tabula_lattice" sourceRef="gw_split_vector_tables" targetRef="tables_tabula_lattice"/>
+    <bpmn:sequenceFlow id="flow_tables_tabula_lattice_gw_join_vector_tables" sourceRef="tables_tabula_lattice" targetRef="gw_join_vector_tables"/>
+    <bpmn:task id="tables_tabula_stream" name="Tables Tabula Stream"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_tabula_stream</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vector_tables_tables_tabula_stream" sourceRef="gw_split_vector_tables" targetRef="tables_tabula_stream"/>
+    <bpmn:sequenceFlow id="flow_tables_tabula_stream_gw_join_vector_tables" sourceRef="tables_tabula_stream" targetRef="gw_join_vector_tables"/>
+    <bpmn:sequenceFlow id="flow_gw_split_vector_tables_skip6_gw_join_vector_tables" name="skip" sourceRef="gw_split_vector_tables" targetRef="gw_join_vector_tables"/>
+    <bpmn:inclusiveGateway id="gw_join_vector_tables" name="" gatewayDirection="Converging"/>
+    <bpmn:inclusiveGateway id="gw_split_vision_llm" name="" gatewayDirection="Diverging"/>
+    <bpmn:sequenceFlow id="flow_gw_join_vector_tables_gw_split_vision_llm" sourceRef="gw_join_vector_tables" targetRef="gw_split_vision_llm"/>
+    <bpmn:task id="vision_claude" name="Vision Claude"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>vision_claude</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vision_llm_vision_claude" sourceRef="gw_split_vision_llm" targetRef="vision_claude"/>
+    <bpmn:sequenceFlow id="flow_vision_claude_gw_join_vision_llm" sourceRef="vision_claude" targetRef="gw_join_vision_llm"/>
+    <bpmn:task id="vision_openai" name="Vision Openai"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>vision_openai</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vision_llm_vision_openai" sourceRef="gw_split_vision_llm" targetRef="vision_openai"/>
+    <bpmn:sequenceFlow id="flow_vision_openai_gw_join_vision_llm" sourceRef="vision_openai" targetRef="gw_join_vision_llm"/>
+    <bpmn:task id="vision_gemini" name="Vision Gemini"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>vision_gemini</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vision_llm_vision_gemini" sourceRef="gw_split_vision_llm" targetRef="vision_gemini"/>
+    <bpmn:sequenceFlow id="flow_vision_gemini_gw_join_vision_llm" sourceRef="vision_gemini" targetRef="gw_join_vision_llm"/>
+    <bpmn:task id="vision_paddle_structure" name="Vision Paddle Structure"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>vision_paddle_structure</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vision_llm_vision_paddle_structure" sourceRef="gw_split_vision_llm" targetRef="vision_paddle_structure"/>
+    <bpmn:sequenceFlow id="flow_vision_paddle_structure_gw_join_vision_llm" sourceRef="vision_paddle_structure" targetRef="gw_join_vision_llm"/>
+    <bpmn:task id="vision_docling" name="Vision Docling"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>vision_docling</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vision_llm_vision_docling" sourceRef="gw_split_vision_llm" targetRef="vision_docling"/>
+    <bpmn:sequenceFlow id="flow_vision_docling_gw_join_vision_llm" sourceRef="vision_docling" targetRef="gw_join_vision_llm"/>
+    <bpmn:task id="layout_parser_detect" name="Layout Parser Detect"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>layout_parser_detect</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vision_llm_layout_parser_detect" sourceRef="gw_split_vision_llm" targetRef="layout_parser_detect"/>
+    <bpmn:sequenceFlow id="flow_layout_parser_detect_gw_join_vision_llm" sourceRef="layout_parser_detect" targetRef="gw_join_vision_llm"/>
+    <bpmn:task id="layout_parser_pdf_detect" name="Layout Parser Pdf Detect"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>layout_parser_pdf_detect</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_split_vision_llm_layout_parser_pdf_detect" sourceRef="gw_split_vision_llm" targetRef="layout_parser_pdf_detect"/>
+    <bpmn:sequenceFlow id="flow_layout_parser_pdf_detect_gw_join_vision_llm" sourceRef="layout_parser_pdf_detect" targetRef="gw_join_vision_llm"/>
+    <bpmn:sequenceFlow id="flow_gw_split_vision_llm_skip7_gw_join_vision_llm" name="skip" sourceRef="gw_split_vision_llm" targetRef="gw_join_vision_llm"/>
+    <bpmn:inclusiveGateway id="gw_join_vision_llm" name="" gatewayDirection="Converging"/>
+    <bpmn:task id="pii_presidio" name="Pii Presidio"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>pii_presidio</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="layout_doc_format" name="Layout Doc Format"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>layout_doc_format</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="layout_custom_table" name="Layout Custom Table"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>layout_custom_table</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="table_crop" name="Table Crop"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>table_crop</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="table_obfuscate" name="Table Obfuscate"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>table_obfuscate</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="annotate_render" name="Annotate Render"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>annotate_render</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:sequenceFlow id="flow_gw_join_vision_llm_pii_presidio" sourceRef="gw_join_vision_llm" targetRef="pii_presidio"/>
+    <bpmn:sequenceFlow id="flow_pii_presidio_layout_doc_format" sourceRef="pii_presidio" targetRef="layout_doc_format"/>
+    <bpmn:sequenceFlow id="flow_layout_doc_format_layout_custom_table" sourceRef="layout_doc_format" targetRef="layout_custom_table"/>
+    <bpmn:sequenceFlow id="flow_layout_custom_table_table_crop" sourceRef="layout_custom_table" targetRef="table_crop"/>
+    <bpmn:sequenceFlow id="flow_table_crop_table_obfuscate" sourceRef="table_crop" targetRef="table_obfuscate"/>
+    <bpmn:sequenceFlow id="flow_table_obfuscate_annotate_render" sourceRef="table_obfuscate" targetRef="annotate_render"/>
+    <bpmn:sequenceFlow id="flow_annotate_render_End" sourceRef="annotate_render" targetRef="EndEvent_master"/>
+    <bpmn:startEvent id="StartEvent_master" name="Start"/>
+    <bpmn:endEvent id="EndEvent_master" name="End"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="master_pipeline">
+      <bpmndi:BPMNShape id="shape_StartEvent_master" bpmnElement="StartEvent_master"><dc:Bounds x="62" y="402" width="36" height="36"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_split_native_pdf" bpmnElement="gw_split_native_pdf" isMarkerVisible="true"><dc:Bounds x="142" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_pymupdf_native" bpmnElement="pymupdf_native"><dc:Bounds x="236" y="324" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_pdfplumber_native" bpmnElement="pdfplumber_native"><dc:Bounds x="236" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_join_native_pdf" bpmnElement="gw_join_native_pdf" isMarkerVisible="true"><dc:Bounds x="454" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_split_preprocessing" bpmnElement="gw_split_preprocessing" isMarkerVisible="true"><dc:Bounds x="548" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_preprocess_opencv" bpmnElement="preprocess_opencv"><dc:Bounds x="642" y="359" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_layout_ruled_table" bpmnElement="layout_ruled_table"><dc:Bounds x="816" y="359" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_join_preprocessing" bpmnElement="gw_join_preprocessing" isMarkerVisible="true"><dc:Bounds x="1034" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_split_ocr" bpmnElement="gw_split_ocr" isMarkerVisible="true"><dc:Bounds x="1128" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_ocr_tesseract" bpmnElement="ocr_tesseract"><dc:Bounds x="1222" y="184" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_ocr_easyocr" bpmnElement="ocr_easyocr"><dc:Bounds x="1222" y="254" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_ocr_doctr" bpmnElement="ocr_doctr"><dc:Bounds x="1222" y="324" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_ocr_paddleocr" bpmnElement="ocr_paddleocr"><dc:Bounds x="1222" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_ocr_trocr" bpmnElement="ocr_trocr"><dc:Bounds x="1222" y="464" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_ocr_deepdoc" bpmnElement="ocr_deepdoc"><dc:Bounds x="1222" y="534" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_join_ocr" bpmnElement="gw_join_ocr" isMarkerVisible="true"><dc:Bounds x="1440" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_split_img2table" bpmnElement="gw_split_img2table" isMarkerVisible="true"><dc:Bounds x="1534" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_img2table_tesseract" bpmnElement="tables_img2table_tesseract"><dc:Bounds x="1628" y="254" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_img2table_easyocr" bpmnElement="tables_img2table_easyocr"><dc:Bounds x="1628" y="324" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_img2table_doctr" bpmnElement="tables_img2table_doctr"><dc:Bounds x="1628" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_img2table_paddle" bpmnElement="tables_img2table_paddle"><dc:Bounds x="1628" y="464" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_join_img2table" bpmnElement="gw_join_img2table" isMarkerVisible="true"><dc:Bounds x="1846" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_split_vector_tables" bpmnElement="gw_split_vector_tables" isMarkerVisible="true"><dc:Bounds x="1940" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_camelot" bpmnElement="tables_camelot"><dc:Bounds x="2034" y="184" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_camelot_lattice" bpmnElement="tables_camelot_lattice"><dc:Bounds x="2034" y="254" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_camelot_stream" bpmnElement="tables_camelot_stream"><dc:Bounds x="2034" y="324" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_tabula" bpmnElement="tables_tabula"><dc:Bounds x="2034" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_tabula_lattice" bpmnElement="tables_tabula_lattice"><dc:Bounds x="2034" y="464" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_tabula_stream" bpmnElement="tables_tabula_stream"><dc:Bounds x="2034" y="534" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_join_vector_tables" bpmnElement="gw_join_vector_tables" isMarkerVisible="true"><dc:Bounds x="2252" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_split_vision_llm" bpmnElement="gw_split_vision_llm" isMarkerVisible="true"><dc:Bounds x="2346" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_vision_claude" bpmnElement="vision_claude"><dc:Bounds x="2440" y="149" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_vision_openai" bpmnElement="vision_openai"><dc:Bounds x="2440" y="219" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_vision_gemini" bpmnElement="vision_gemini"><dc:Bounds x="2440" y="289" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_vision_paddle_structure" bpmnElement="vision_paddle_structure"><dc:Bounds x="2440" y="359" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_vision_docling" bpmnElement="vision_docling"><dc:Bounds x="2440" y="429" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_layout_parser_detect" bpmnElement="layout_parser_detect"><dc:Bounds x="2440" y="499" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_layout_parser_pdf_detect" bpmnElement="layout_parser_pdf_detect"><dc:Bounds x="2440" y="569" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_join_vision_llm" bpmnElement="gw_join_vision_llm" isMarkerVisible="true"><dc:Bounds x="2658" y="395" width="50" height="50"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_pii_presidio" bpmnElement="pii_presidio"><dc:Bounds x="2752" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_layout_doc_format" bpmnElement="layout_doc_format"><dc:Bounds x="2926" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_layout_custom_table" bpmnElement="layout_custom_table"><dc:Bounds x="3100" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_table_crop" bpmnElement="table_crop"><dc:Bounds x="3274" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_table_obfuscate" bpmnElement="table_obfuscate"><dc:Bounds x="3448" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_annotate_render" bpmnElement="annotate_render"><dc:Bounds x="3622" y="394" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_EndEvent_master" bpmnElement="EndEvent_master"><dc:Bounds x="3796" y="402" width="36" height="36"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_flow_StartEvent_master_gw_split_native_pdf" bpmnElement="flow_StartEvent_master_gw_split_native_pdf"><di:waypoint x="98" y="420"/><di:waypoint x="142" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_native_pdf_pymupdf_native" bpmnElement="flow_gw_split_native_pdf_pymupdf_native"><di:waypoint x="192" y="420"/><di:waypoint x="214" y="420"/><di:waypoint x="214" y="350"/><di:waypoint x="236" y="350"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_pymupdf_native_gw_join_native_pdf" bpmnElement="flow_pymupdf_native_gw_join_native_pdf"><di:waypoint x="366" y="350"/><di:waypoint x="432" y="350"/><di:waypoint x="432" y="420"/><di:waypoint x="454" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_native_pdf_pdfplumber_native" bpmnElement="flow_gw_split_native_pdf_pdfplumber_native"><di:waypoint x="192" y="420"/><di:waypoint x="214" y="420"/><di:waypoint x="214" y="420"/><di:waypoint x="236" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_pdfplumber_native_gw_join_native_pdf" bpmnElement="flow_pdfplumber_native_gw_join_native_pdf"><di:waypoint x="366" y="420"/><di:waypoint x="432" y="420"/><di:waypoint x="432" y="420"/><di:waypoint x="454" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_native_pdf_skip2_gw_join_native_pdf" bpmnElement="flow_gw_split_native_pdf_skip2_gw_join_native_pdf"><di:waypoint x="167" y="445"/><di:waypoint x="167" y="581"/><di:waypoint x="479" y="581"/><di:waypoint x="479" y="445"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_join_native_pdf_gw_split_preprocessing" bpmnElement="flow_gw_join_native_pdf_gw_split_preprocessing"><di:waypoint x="479" y="420"/><di:waypoint x="548" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_preprocessing_preprocess_opencv" bpmnElement="flow_gw_split_preprocessing_preprocess_opencv"><di:waypoint x="598" y="420"/><di:waypoint x="620" y="420"/><di:waypoint x="620" y="385"/><di:waypoint x="642" y="385"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_preprocess_opencv_layout_ruled_table" bpmnElement="flow_preprocess_opencv_layout_ruled_table"><di:waypoint x="772" y="385"/><di:waypoint x="816" y="385"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_layout_ruled_table_gw_join_preprocessing" bpmnElement="flow_layout_ruled_table_gw_join_preprocessing"><di:waypoint x="946" y="385"/><di:waypoint x="1012" y="385"/><di:waypoint x="1012" y="420"/><di:waypoint x="1034" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_preprocessing_skip1_gw_join_preprocessing" bpmnElement="flow_gw_split_preprocessing_skip1_gw_join_preprocessing"><di:waypoint x="573" y="445"/><di:waypoint x="573" y="546"/><di:waypoint x="1059" y="546"/><di:waypoint x="1059" y="445"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_join_preprocessing_gw_split_ocr" bpmnElement="flow_gw_join_preprocessing_gw_split_ocr"><di:waypoint x="1059" y="420"/><di:waypoint x="1128" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_ocr_ocr_tesseract" bpmnElement="flow_gw_split_ocr_ocr_tesseract"><di:waypoint x="1178" y="420"/><di:waypoint x="1200" y="420"/><di:waypoint x="1200" y="210"/><di:waypoint x="1222" y="210"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_ocr_tesseract_gw_join_ocr" bpmnElement="flow_ocr_tesseract_gw_join_ocr"><di:waypoint x="1352" y="210"/><di:waypoint x="1418" y="210"/><di:waypoint x="1418" y="420"/><di:waypoint x="1440" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_ocr_ocr_easyocr" bpmnElement="flow_gw_split_ocr_ocr_easyocr"><di:waypoint x="1178" y="420"/><di:waypoint x="1200" y="420"/><di:waypoint x="1200" y="280"/><di:waypoint x="1222" y="280"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_ocr_easyocr_gw_join_ocr" bpmnElement="flow_ocr_easyocr_gw_join_ocr"><di:waypoint x="1352" y="280"/><di:waypoint x="1418" y="280"/><di:waypoint x="1418" y="420"/><di:waypoint x="1440" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_ocr_ocr_doctr" bpmnElement="flow_gw_split_ocr_ocr_doctr"><di:waypoint x="1178" y="420"/><di:waypoint x="1200" y="420"/><di:waypoint x="1200" y="350"/><di:waypoint x="1222" y="350"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_ocr_doctr_gw_join_ocr" bpmnElement="flow_ocr_doctr_gw_join_ocr"><di:waypoint x="1352" y="350"/><di:waypoint x="1418" y="350"/><di:waypoint x="1418" y="420"/><di:waypoint x="1440" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_ocr_ocr_paddleocr" bpmnElement="flow_gw_split_ocr_ocr_paddleocr"><di:waypoint x="1178" y="420"/><di:waypoint x="1200" y="420"/><di:waypoint x="1200" y="420"/><di:waypoint x="1222" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_ocr_paddleocr_gw_join_ocr" bpmnElement="flow_ocr_paddleocr_gw_join_ocr"><di:waypoint x="1352" y="420"/><di:waypoint x="1418" y="420"/><di:waypoint x="1418" y="420"/><di:waypoint x="1440" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_ocr_ocr_trocr" bpmnElement="flow_gw_split_ocr_ocr_trocr"><di:waypoint x="1178" y="420"/><di:waypoint x="1200" y="420"/><di:waypoint x="1200" y="490"/><di:waypoint x="1222" y="490"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_ocr_trocr_gw_join_ocr" bpmnElement="flow_ocr_trocr_gw_join_ocr"><di:waypoint x="1352" y="490"/><di:waypoint x="1418" y="490"/><di:waypoint x="1418" y="420"/><di:waypoint x="1440" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_ocr_ocr_deepdoc" bpmnElement="flow_gw_split_ocr_ocr_deepdoc"><di:waypoint x="1178" y="420"/><di:waypoint x="1200" y="420"/><di:waypoint x="1200" y="560"/><di:waypoint x="1222" y="560"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_ocr_deepdoc_gw_join_ocr" bpmnElement="flow_ocr_deepdoc_gw_join_ocr"><di:waypoint x="1352" y="560"/><di:waypoint x="1418" y="560"/><di:waypoint x="1418" y="420"/><di:waypoint x="1440" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_ocr_skip6_gw_join_ocr" bpmnElement="flow_gw_split_ocr_skip6_gw_join_ocr"><di:waypoint x="1153" y="445"/><di:waypoint x="1153" y="721"/><di:waypoint x="1465" y="721"/><di:waypoint x="1465" y="445"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_join_ocr_gw_split_img2table" bpmnElement="flow_gw_join_ocr_gw_split_img2table"><di:waypoint x="1465" y="420"/><di:waypoint x="1534" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_img2table_tables_img2table_tesseract" bpmnElement="flow_gw_split_img2table_tables_img2table_tesseract"><di:waypoint x="1584" y="420"/><di:waypoint x="1606" y="420"/><di:waypoint x="1606" y="280"/><di:waypoint x="1628" y="280"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_img2table_tesseract_gw_join_img2table" bpmnElement="flow_tables_img2table_tesseract_gw_join_img2table"><di:waypoint x="1758" y="280"/><di:waypoint x="1824" y="280"/><di:waypoint x="1824" y="420"/><di:waypoint x="1846" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_img2table_tables_img2table_easyocr" bpmnElement="flow_gw_split_img2table_tables_img2table_easyocr"><di:waypoint x="1584" y="420"/><di:waypoint x="1606" y="420"/><di:waypoint x="1606" y="350"/><di:waypoint x="1628" y="350"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_img2table_easyocr_gw_join_img2table" bpmnElement="flow_tables_img2table_easyocr_gw_join_img2table"><di:waypoint x="1758" y="350"/><di:waypoint x="1824" y="350"/><di:waypoint x="1824" y="420"/><di:waypoint x="1846" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_img2table_tables_img2table_doctr" bpmnElement="flow_gw_split_img2table_tables_img2table_doctr"><di:waypoint x="1584" y="420"/><di:waypoint x="1606" y="420"/><di:waypoint x="1606" y="420"/><di:waypoint x="1628" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_img2table_doctr_gw_join_img2table" bpmnElement="flow_tables_img2table_doctr_gw_join_img2table"><di:waypoint x="1758" y="420"/><di:waypoint x="1824" y="420"/><di:waypoint x="1824" y="420"/><di:waypoint x="1846" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_img2table_tables_img2table_paddle" bpmnElement="flow_gw_split_img2table_tables_img2table_paddle"><di:waypoint x="1584" y="420"/><di:waypoint x="1606" y="420"/><di:waypoint x="1606" y="490"/><di:waypoint x="1628" y="490"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_img2table_paddle_gw_join_img2table" bpmnElement="flow_tables_img2table_paddle_gw_join_img2table"><di:waypoint x="1758" y="490"/><di:waypoint x="1824" y="490"/><di:waypoint x="1824" y="420"/><di:waypoint x="1846" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_img2table_skip4_gw_join_img2table" bpmnElement="flow_gw_split_img2table_skip4_gw_join_img2table"><di:waypoint x="1559" y="445"/><di:waypoint x="1559" y="651"/><di:waypoint x="1871" y="651"/><di:waypoint x="1871" y="445"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_join_img2table_gw_split_vector_tables" bpmnElement="flow_gw_join_img2table_gw_split_vector_tables"><di:waypoint x="1871" y="420"/><di:waypoint x="1940" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vector_tables_tables_camelot" bpmnElement="flow_gw_split_vector_tables_tables_camelot"><di:waypoint x="1990" y="420"/><di:waypoint x="2012" y="420"/><di:waypoint x="2012" y="210"/><di:waypoint x="2034" y="210"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_camelot_gw_join_vector_tables" bpmnElement="flow_tables_camelot_gw_join_vector_tables"><di:waypoint x="2164" y="210"/><di:waypoint x="2230" y="210"/><di:waypoint x="2230" y="420"/><di:waypoint x="2252" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vector_tables_tables_camelot_lattice" bpmnElement="flow_gw_split_vector_tables_tables_camelot_lattice"><di:waypoint x="1990" y="420"/><di:waypoint x="2012" y="420"/><di:waypoint x="2012" y="280"/><di:waypoint x="2034" y="280"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_camelot_lattice_gw_join_vector_tables" bpmnElement="flow_tables_camelot_lattice_gw_join_vector_tables"><di:waypoint x="2164" y="280"/><di:waypoint x="2230" y="280"/><di:waypoint x="2230" y="420"/><di:waypoint x="2252" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vector_tables_tables_camelot_stream" bpmnElement="flow_gw_split_vector_tables_tables_camelot_stream"><di:waypoint x="1990" y="420"/><di:waypoint x="2012" y="420"/><di:waypoint x="2012" y="350"/><di:waypoint x="2034" y="350"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_camelot_stream_gw_join_vector_tables" bpmnElement="flow_tables_camelot_stream_gw_join_vector_tables"><di:waypoint x="2164" y="350"/><di:waypoint x="2230" y="350"/><di:waypoint x="2230" y="420"/><di:waypoint x="2252" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vector_tables_tables_tabula" bpmnElement="flow_gw_split_vector_tables_tables_tabula"><di:waypoint x="1990" y="420"/><di:waypoint x="2012" y="420"/><di:waypoint x="2012" y="420"/><di:waypoint x="2034" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_tabula_gw_join_vector_tables" bpmnElement="flow_tables_tabula_gw_join_vector_tables"><di:waypoint x="2164" y="420"/><di:waypoint x="2230" y="420"/><di:waypoint x="2230" y="420"/><di:waypoint x="2252" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vector_tables_tables_tabula_lattice" bpmnElement="flow_gw_split_vector_tables_tables_tabula_lattice"><di:waypoint x="1990" y="420"/><di:waypoint x="2012" y="420"/><di:waypoint x="2012" y="490"/><di:waypoint x="2034" y="490"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_tabula_lattice_gw_join_vector_tables" bpmnElement="flow_tables_tabula_lattice_gw_join_vector_tables"><di:waypoint x="2164" y="490"/><di:waypoint x="2230" y="490"/><di:waypoint x="2230" y="420"/><di:waypoint x="2252" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vector_tables_tables_tabula_stream" bpmnElement="flow_gw_split_vector_tables_tables_tabula_stream"><di:waypoint x="1990" y="420"/><di:waypoint x="2012" y="420"/><di:waypoint x="2012" y="560"/><di:waypoint x="2034" y="560"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_tabula_stream_gw_join_vector_tables" bpmnElement="flow_tables_tabula_stream_gw_join_vector_tables"><di:waypoint x="2164" y="560"/><di:waypoint x="2230" y="560"/><di:waypoint x="2230" y="420"/><di:waypoint x="2252" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vector_tables_skip6_gw_join_vector_tables" bpmnElement="flow_gw_split_vector_tables_skip6_gw_join_vector_tables"><di:waypoint x="1965" y="445"/><di:waypoint x="1965" y="721"/><di:waypoint x="2277" y="721"/><di:waypoint x="2277" y="445"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_join_vector_tables_gw_split_vision_llm" bpmnElement="flow_gw_join_vector_tables_gw_split_vision_llm"><di:waypoint x="2277" y="420"/><di:waypoint x="2346" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vision_llm_vision_claude" bpmnElement="flow_gw_split_vision_llm_vision_claude"><di:waypoint x="2396" y="420"/><di:waypoint x="2418" y="420"/><di:waypoint x="2418" y="175"/><di:waypoint x="2440" y="175"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_vision_claude_gw_join_vision_llm" bpmnElement="flow_vision_claude_gw_join_vision_llm"><di:waypoint x="2570" y="175"/><di:waypoint x="2636" y="175"/><di:waypoint x="2636" y="420"/><di:waypoint x="2658" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vision_llm_vision_openai" bpmnElement="flow_gw_split_vision_llm_vision_openai"><di:waypoint x="2396" y="420"/><di:waypoint x="2418" y="420"/><di:waypoint x="2418" y="245"/><di:waypoint x="2440" y="245"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_vision_openai_gw_join_vision_llm" bpmnElement="flow_vision_openai_gw_join_vision_llm"><di:waypoint x="2570" y="245"/><di:waypoint x="2636" y="245"/><di:waypoint x="2636" y="420"/><di:waypoint x="2658" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vision_llm_vision_gemini" bpmnElement="flow_gw_split_vision_llm_vision_gemini"><di:waypoint x="2396" y="420"/><di:waypoint x="2418" y="420"/><di:waypoint x="2418" y="315"/><di:waypoint x="2440" y="315"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_vision_gemini_gw_join_vision_llm" bpmnElement="flow_vision_gemini_gw_join_vision_llm"><di:waypoint x="2570" y="315"/><di:waypoint x="2636" y="315"/><di:waypoint x="2636" y="420"/><di:waypoint x="2658" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vision_llm_vision_paddle_structure" bpmnElement="flow_gw_split_vision_llm_vision_paddle_structure"><di:waypoint x="2396" y="420"/><di:waypoint x="2418" y="420"/><di:waypoint x="2418" y="385"/><di:waypoint x="2440" y="385"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_vision_paddle_structure_gw_join_vision_llm" bpmnElement="flow_vision_paddle_structure_gw_join_vision_llm"><di:waypoint x="2570" y="385"/><di:waypoint x="2636" y="385"/><di:waypoint x="2636" y="420"/><di:waypoint x="2658" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vision_llm_vision_docling" bpmnElement="flow_gw_split_vision_llm_vision_docling"><di:waypoint x="2396" y="420"/><di:waypoint x="2418" y="420"/><di:waypoint x="2418" y="455"/><di:waypoint x="2440" y="455"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_vision_docling_gw_join_vision_llm" bpmnElement="flow_vision_docling_gw_join_vision_llm"><di:waypoint x="2570" y="455"/><di:waypoint x="2636" y="455"/><di:waypoint x="2636" y="420"/><di:waypoint x="2658" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vision_llm_layout_parser_detect" bpmnElement="flow_gw_split_vision_llm_layout_parser_detect"><di:waypoint x="2396" y="420"/><di:waypoint x="2418" y="420"/><di:waypoint x="2418" y="525"/><di:waypoint x="2440" y="525"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_layout_parser_detect_gw_join_vision_llm" bpmnElement="flow_layout_parser_detect_gw_join_vision_llm"><di:waypoint x="2570" y="525"/><di:waypoint x="2636" y="525"/><di:waypoint x="2636" y="420"/><di:waypoint x="2658" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vision_llm_layout_parser_pdf_detect" bpmnElement="flow_gw_split_vision_llm_layout_parser_pdf_detect"><di:waypoint x="2396" y="420"/><di:waypoint x="2418" y="420"/><di:waypoint x="2418" y="595"/><di:waypoint x="2440" y="595"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_layout_parser_pdf_detect_gw_join_vision_llm" bpmnElement="flow_layout_parser_pdf_detect_gw_join_vision_llm"><di:waypoint x="2570" y="595"/><di:waypoint x="2636" y="595"/><di:waypoint x="2636" y="420"/><di:waypoint x="2658" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_split_vision_llm_skip7_gw_join_vision_llm" bpmnElement="flow_gw_split_vision_llm_skip7_gw_join_vision_llm"><di:waypoint x="2371" y="445"/><di:waypoint x="2371" y="756"/><di:waypoint x="2683" y="756"/><di:waypoint x="2683" y="445"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_gw_join_vision_llm_pii_presidio" bpmnElement="flow_gw_join_vision_llm_pii_presidio"><di:waypoint x="2708" y="420"/><di:waypoint x="2752" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_pii_presidio_layout_doc_format" bpmnElement="flow_pii_presidio_layout_doc_format"><di:waypoint x="2882" y="420"/><di:waypoint x="2926" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_layout_doc_format_layout_custom_table" bpmnElement="flow_layout_doc_format_layout_custom_table"><di:waypoint x="3056" y="420"/><di:waypoint x="3100" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_layout_custom_table_table_crop" bpmnElement="flow_layout_custom_table_table_crop"><di:waypoint x="3230" y="420"/><di:waypoint x="3274" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_table_crop_table_obfuscate" bpmnElement="flow_table_crop_table_obfuscate"><di:waypoint x="3404" y="420"/><di:waypoint x="3448" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_table_obfuscate_annotate_render" bpmnElement="flow_table_obfuscate_annotate_render"><di:waypoint x="3578" y="420"/><di:waypoint x="3622" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_annotate_render_End" bpmnElement="flow_annotate_render_End"><di:waypoint x="3752" y="420"/><di:waypoint x="3796" y="420"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

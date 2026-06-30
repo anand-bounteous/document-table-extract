@@ -1,0 +1,152 @@
+[project]
+name = "sof-table-extract"
+version = "0.1.0"
+description = "OCR / document-parsing benchmarking tool"
+requires-python = ">=3.12"
+
+# ---------------------------------------------------------------------------
+# SYSTEM PREREQUISITES (NOT pip-installable — see SETUP.md)
+#   - tesseract      (OCR engine; brew install tesseract)
+#   - poppler        (pdftoppm; brew install poppler) — only needed if not using PyMuPDF rasterization
+#   - ghostscript    (Camelot runtime; brew install ghostscript)        [tables-vector]
+#   - openjdk        (Tabula runtime;  brew install openjdk)            [tables-vector]
+#   - pango, cairo   (WeasyPrint;      brew install pango cairo libffi)  [pdf reports]
+# ---------------------------------------------------------------------------
+
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pymupdf>=1.24",
+    "pillow>=10.4",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "python-multipart>=0.0.9",
+    "python-dotenv>=1.0",
+    "pytesseract>=0.3.10",
+    "opencv-python>=4.10",
+    "numpy>=1.26",
+    "anthropic>=0.39",
+    "json-repair>=0.30",
+    "presidio-analyzer>=2.2",
+    "spacy>=3.7",
+    # After installing spaCy, also run:
+    #   python -m spacy download en_core_web_lg
+    "weasyprint>=62",
+    "cryptography>=43",
+    "jinja2>=3.1",
+    "SpiffWorkflow>=3.1",
+    "opencv-python-headless>=4.13.0.92",
+    "psutil>=5.9",
+    "gliner>=0.2.26",
+]
+
+[project.optional-dependencies]
+# Bordered + borderless table detection on rasterized pages.
+tables-img = ["img2table>=1.4"]
+
+# Vector-PDF tables. Camelot needs Ghostscript on PATH; Tabula needs a JVM.
+tables-vector = [
+    "camelot-py[base]>=0.11",
+    "tabula-py>=2.9",
+]
+
+# PP-StructureV3 requires paddlex[ocr] in addition to paddleocr+paddlepaddle,
+# and downloads its model weights from paddlepaddle.org.cn on first use.
+ocr-paddle = [
+    "paddleocr>=3.0",
+    "paddlepaddle>=3.0",
+    "paddlex[ocr]>=3.0",
+]
+
+# Alternate OCR baselines. Both pull torch; download detector + recognizer models on first use.
+ocr-easy = ["easyocr>=1.7"]
+ocr-doctr = ["python-doctr[torch]>=0.8"]
+
+# IBM docling — pulls torch + transformers; downloads layout model (~2 GB) on first run.
+docling = ["docling>=2.0"]
+
+# pdfplumber: pure-Python native-PDF text + table extraction (pdfminer.six under the hood).
+native-pdfplumber = ["pdfplumber>=0.11"]
+
+# Layout-Parser: Detectron2 PubLayNet for layout detection + doc-format label.
+# Note: the PyPI distribution name is `layoutparser` (no hyphen); only the
+# extras group name uses a hyphen. detectron2 itself is NOT on PyPI as a
+# normal wheel on Apple Silicon — see SETUP.md for the platform-specific
+# install path.
+layout-parser = ["layoutparser>=0.3"]
+
+# TrOCR (handwritten + printed) via HuggingFace transformers. Reuses easyocr
+# as the line detector so we don't double-install detection models.
+#
+# transformers is pinned <5 deliberately: the 5.x line pulls
+# ``huggingface_hub>=1.0`` whose httpx-based downloader has a regression that
+# closes the global client before the first request — TrOCR fails to load
+# its processor with ``Cannot send a request, as the client has been
+# closed``. The 4.x line uses the stable requests-based downloader.
+ocr-trocr = [
+    "transformers>=4.40,<5",
+    "huggingface_hub<1",
+    "easyocr>=1.7",
+    "torch>=2.0",
+]
+
+# RAGFlow deepdoc (vendored at backend/vendor/deepdoc/) — runtime deps only.
+# We DO NOT install ragflow itself: its pyproject.toml requires Python 3.13+
+# and its packaging is broken on a fresh git clone. See vendor/VENDORED_FROM.md.
+ocr-deepdoc = [
+    "onnxruntime>=1.18,<2",       # CPU; macOS arm64 wheel available
+    "xgboost>=1.6,<3",            # text-concat model in TableStructureRecognizer
+    "scikit-learn>=1.3",          # KMeans clustering in layout heuristics
+    "huggingface_hub<1",          # InfiniFlow/deepdoc model snapshot download
+    # opencv-python, pdfplumber, numpy, pillow already in core deps
+]
+
+# LLM vision providers — install whichever API keys you have configured.
+llm-openai = ["openai>=1.40"]
+llm-gemini = ["google-generativeai>=0.8"]
+
+# Optional visual identifiers for the PII benchmark (§6b.5).
+# QR codes work without this extra (cv2.QRCodeDetector is in core deps).
+# Barcode decoding additionally needs pyzbar; on macOS run `brew install zbar`.
+pii-v2-visual = ["pyzbar>=0.1.9"]
+
+# Optional same-length mock generators for the PII redaction step (§6b.12).
+# Without this extra the redaction pipeline still works — it falls back to
+# a built-in name/organisation dictionary — but Faker gives more variety
+# and a UK locale.
+pii-v2-redaction = ["faker>=20.0"]
+
+# Convenience meta-group: everything except the heaviest ML deps.
+phase2-light = [
+    "img2table>=1.4",
+    "camelot-py[base]>=0.11",
+    "tabula-py>=2.9",
+    "easyocr>=1.7",
+    "python-doctr[torch]>=0.8",
+]
+
+# Convenience meta-group: pull every Phase-2 solution at once.
+phase2 = [
+    "img2table>=1.4",
+    "camelot-py[base]>=0.11",
+    "tabula-py>=2.9",
+    "paddleocr>=3.0",
+    "paddlepaddle>=3.0",
+    "paddlex[ocr]>=3.0",
+    "docling>=2.0",
+    "easyocr>=1.7",
+    "python-doctr[torch]>=0.8",
+]
+
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OCR Comparison Report — {{ state.document.filename }}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1f2328; margin: 32px; }
+  h1, h2, h3 { margin: 0.6em 0 0.3em; }
+  h1 { font-size: 22px; }
+  h2 { font-size: 18px; border-bottom: 1px solid #d0d7de; padding-bottom: 4px; }
+  h3 { font-size: 15px; color: #57606a; }
+  .meta { color: #57606a; font-size: 13px; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 18px; }
+  .card { border: 1px solid #d0d7de; border-radius: 6px; padding: 14px; background: #f6f8fa; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; background: #eaeef2; }
+  .pill.ok { background: #dafbe1; color: #1a7f37; }
+  .pill.error { background: #ffebe9; color: #cf222e; }
+  .pill.skipped { background: #fff8c5; color: #9a6700; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  th, td { border: 1px solid #d0d7de; padding: 4px 6px; vertical-align: top; }
+  th { background: #eaeef2; text-align: left; }
+  .annot { max-width: 100%; border: 1px solid #d0d7de; border-radius: 4px; }
+  details { margin: 6px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  .audit { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; }
+  .audit .step { display: grid; grid-template-columns: 36px 1fr 90px; gap: 8px; padding: 2px 0; border-bottom: 1px dashed #d0d7de; }
+  .pii { color: #cf222e; font-weight: 600; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<h1>OCR Comparison Report</h1>
+<div class="meta">
+  <strong>{{ state.document.filename }}</strong> &middot;
+  pdf_kind: <code>{{ state.document.pdf_kind }}</code> &middot;
+  pages: {{ state.document.n_pages }} &middot;
+  run_id: <code>{{ state.run_id }}</code> &middot;
+  status: <span class="pill {{ state.status }}">{{ state.status }}</span>
+</div>
+
+<h2>Side-by-side</h2>
+<div class="grid">
+  {% for sol in state.solution_results %}
+  <div class="card">
+    <div class="row">
+      <h3 style="margin:0">{{ sol.solution_name }}</h3>
+      <span class="pill {{ sol.status }}">{{ sol.status }}</span>
+      <span class="pill">conf {{ "%.2f"|format(sol.overall_confidence or 0) }}</span>
+      <span class="pill">{{ "%.0f"|format(sol.timings.total_ms or 0) }} ms</span>
+    </div>
+    {% if sol.status == 'skipped' %}
+      <p><em>skipped:</em> {{ sol.skipped_reason }}</p>
+    {% elif sol.status == 'error' %}
+      <p style="color:#cf222e"><em>error:</em> {{ sol.error }}</p>
+    {% endif %}
+
+    {% for page in sol.pages %}
+      <h4 style="margin-top:14px">Page {{ page.page_index + 1 }}</h4>
+      {% if page.annotated_image_data_url %}
+        <img class="annot" src="{{ page.annotated_image_data_url }}" alt="annotated page {{ page.page_index + 1 }}">
+      {% endif %}
+
+      <details>
+        <summary>Regions ({{ page.regions|length }})</summary>
+        <table>
+          <thead><tr><th>type</th><th>conf</th><th>bbox</th><th>tool</th><th>text</th></tr></thead>
+          <tbody>
+            {% for r in page.regions[:60] %}
+              <tr>
+                <td>{{ r.type }}</td>
+                <td>{{ "%.2f"|format(r.confidence) }}</td>
+                <td>{{ "%d,%d,%dx%d"|format(r.bbox.x|int, r.bbox.y|int, r.bbox.w|int, r.bbox.h|int) }}</td>
+                <td>{{ r.source_tool }}</td>
+                <td>{{ r.text[:140] }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if page.regions|length > 60 %}<p><em>(truncated — {{ page.regions|length - 60 }} more)</em></p>{% endif %}
+      </details>
+
+      {% if page.tables %}
+      <details>
+        <summary>Tables ({{ page.tables|length }})</summary>
+        {% for tbl in page.tables %}
+          <p><strong>{{ tbl.n_rows }} × {{ tbl.n_cols }}</strong> ({{ tbl.border_mode }})</p>
+          <table>
+            {% for r in range(tbl.n_rows) %}
+              <tr>
+                {% for c in range(tbl.n_cols) %}
+                  {% set cell = tbl.cells | selectattr('row','equalto',r) | selectattr('col','equalto',c) | list | first %}
+                  <td>{{ cell.text if cell else '' }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </table>
+        {% endfor %}
+      </details>
+      {% endif %}
+
+      {% set pii_count = page.regions | map(attribute='pii_spans') | map('length') | sum %}
+      {% if pii_count %}
+      <details>
+        <summary class="pii">PII detected ({{ pii_count }})</summary>
+        <table>
+          <thead><tr><th>type</th><th>score</th><th>masked</th></tr></thead>
+          <tbody>
+            {% for r in page.regions %}
+              {% for span in r.pii_spans %}
+                <tr>
+                  <td>{{ span.entity_type }}</td>
+                  <td>{{ "%.2f"|format(span.score) }}</td>
+                  <td><code>{{ span.masked_value }}</code></td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </details>
+      {% endif %}
+    {% endfor %}
+
+    <details>
+      <summary>Audit timeline ({{ sol.audit|length }} steps)</summary>
+      <div class="audit">
+        {% for step in sol.audit %}
+          <div class="step">
+            <div>#{{ step.order }}</div>
+            <div><strong>{{ step.stage_name }}</strong> · {{ step.tool }} · <span class="pill {{ step.status }}">{{ step.status }}</span>{% if step.message %} <em>{{ step.message }}</em>{% endif %}</div>
+            <div>{{ "%.0f"|format(step.duration_ms) }} ms</div>
+          </div>
+        {% endfor %}
+      </div>
+    </details>
+  </div>
+  {% endfor %}
+</div>
+
+<p style="margin-top:32px;color:#57606a;font-size:12px">
+  Confidence is a within-solution quality signal. For a cross-solution ranking, run the benchmark harness.
+</p>
+
+</body>
+</html>

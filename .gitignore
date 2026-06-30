@@ -1,0 +1,50 @@
+# Python virtual environment
+backend/.venv/
+
+# Python build artifacts
+backend/*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment files
+backend/.env
+
+# Node modules
+frontend/node_modules/
+
+# Next.js build output
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# TypeScript build info
+frontend/tsconfig.tsbuildinfo
+
+# Logs
+backend/logs/
+
+# Storage (uploaded/processed files)
+backend/storage/
+/storage/
+
+# Local backups (logs / storage snapshots taken manually)
+backend/backup.*/
+backend/logs.bak.*
+backend/storage.bak.*
+
+# Personal scratchpad / scratch notes that shouldn't be shared
+scratchpad.md
+/scratchpad/
+
+# Generated synthetic datasets (re-runnable via scripts/generate_pii_dataset.py)
+data/pii_v2/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

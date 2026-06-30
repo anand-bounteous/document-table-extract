@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  id="Definitions_tabula_stream"
+  targetNamespace="http://sof-table-extract"
+  exporter="sof-table-extract" exporterVersion="0.2">
+
+  <bpmn:process id="tabula_stream" name="Tabula · Stream (whitespace, guess columns)" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_tabula_stream" name="Start"/>
+    <bpmn:sequenceFlow id="flow_Start_tables_tabula_stream" sourceRef="StartEvent_tabula_stream" targetRef="tables_tabula_stream"/>
+    <bpmn:sequenceFlow id="flow_tables_tabula_stream_pii_presidio" sourceRef="tables_tabula_stream" targetRef="pii_presidio"/>
+    <bpmn:sequenceFlow id="flow_pii_presidio_layout_custom_table" sourceRef="pii_presidio" targetRef="layout_custom_table"/>
+    <bpmn:sequenceFlow id="flow_layout_custom_table_table_crop" sourceRef="layout_custom_table" targetRef="table_crop"/>
+    <bpmn:sequenceFlow id="flow_table_crop_table_obfuscate" sourceRef="table_crop" targetRef="table_obfuscate"/>
+    <bpmn:sequenceFlow id="flow_table_obfuscate_annotate_render" sourceRef="table_obfuscate" targetRef="annotate_render"/>
+    <bpmn:sequenceFlow id="flow_annotate_render_End" sourceRef="annotate_render" targetRef="EndEvent_tabula_stream"/>
+    <bpmn:task id="tables_tabula_stream" name="Tables Tabula Stream"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>tables_tabula_stream</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="pii_presidio" name="Pii Presidio"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>pii_presidio</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="layout_custom_table" name="Layout Custom Table"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>layout_custom_table</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="table_crop" name="Table Crop"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>table_crop</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="table_obfuscate" name="Table Obfuscate"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>table_obfuscate</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:task id="annotate_render" name="Annotate Render"><bpmn:extensionElements><camunda:field name="stage_name"><camunda:string>annotate_render</camunda:string></camunda:field></bpmn:extensionElements></bpmn:task>
+    <bpmn:endEvent id="EndEvent_tabula_stream" name="End"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="tabula_stream">
+      <bpmndi:BPMNShape id="shape_StartEvent_tabula_stream" bpmnElement="StartEvent_tabula_stream"><dc:Bounds x="82" y="90" width="36" height="36"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_tables_tabula_stream" bpmnElement="tables_tabula_stream"><dc:Bounds x="162" y="82" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_pii_presidio" bpmnElement="pii_presidio"><dc:Bounds x="336" y="82" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_layout_custom_table" bpmnElement="layout_custom_table"><dc:Bounds x="510" y="82" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_table_crop" bpmnElement="table_crop"><dc:Bounds x="684" y="82" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_table_obfuscate" bpmnElement="table_obfuscate"><dc:Bounds x="858" y="82" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_annotate_render" bpmnElement="annotate_render"><dc:Bounds x="1032" y="82" width="130" height="52"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_EndEvent_tabula_stream" bpmnElement="EndEvent_tabula_stream"><dc:Bounds x="1206" y="90" width="36" height="36"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_flow_Start_tables_tabula_stream" bpmnElement="flow_Start_tables_tabula_stream"><di:waypoint x="118" y="108"/><di:waypoint x="162" y="108"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_tables_tabula_stream_pii_presidio" bpmnElement="flow_tables_tabula_stream_pii_presidio"><di:waypoint x="292" y="108"/><di:waypoint x="336" y="108"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_pii_presidio_layout_custom_table" bpmnElement="flow_pii_presidio_layout_custom_table"><di:waypoint x="466" y="108"/><di:waypoint x="510" y="108"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_layout_custom_table_table_crop" bpmnElement="flow_layout_custom_table_table_crop"><di:waypoint x="640" y="108"/><di:waypoint x="684" y="108"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_table_crop_table_obfuscate" bpmnElement="flow_table_crop_table_obfuscate"><di:waypoint x="814" y="108"/><di:waypoint x="858" y="108"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_table_obfuscate_annotate_render" bpmnElement="flow_table_obfuscate_annotate_render"><di:waypoint x="988" y="108"/><di:waypoint x="1032" y="108"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_annotate_render_End" bpmnElement="flow_annotate_render_End"><di:waypoint x="1162" y="108"/><di:waypoint x="1206" y="108"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

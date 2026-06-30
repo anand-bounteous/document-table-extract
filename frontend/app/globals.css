@@ -1,0 +1,59 @@
+:root {
+  --fg: #1f2328;
+  --muted: #57606a;
+  --border: #d0d7de;
+  --bg: #ffffff;
+  --bg-soft: #f6f8fa;
+  --accent: #0969da;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  font-size: 14px;
+  line-height: 1.45;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font: inherit; }
+.container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+.muted { color: var(--muted); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; background: #eaeef2; }
+.pill.ok { background: #dafbe1; color: #1a7f37; }
+.pill.error { background: #ffebe9; color: #cf222e; }
+.pill.skipped { background: #fff8c5; color: #9a6700; }
+.pill.running { background: #ddf4ff; color: #0969da; }
+.card { border: 1px solid var(--border); border-radius: 8px; background: var(--bg-soft); padding: 14px; }
+.btn { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; background: white; cursor: pointer; }
+.btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.grid { display: grid; gap: 18px; }
+.grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
+table { border-collapse: collapse; width: 100%; font-size: 12px; }
+th, td { border: 1px solid var(--border); padding: 4px 6px; vertical-align: top; }
+th { background: #eaeef2; text-align: left; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+/* bpmn-js base styles */
+@import 'bpmn-js/dist/assets/diagram-js.css';
+@import 'bpmn-js/dist/assets/bpmn-js.css';
+@import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
+
+/* bpmn-js task marker classes (applied via canvas.addMarker) */
+.ote-task-done     .djs-visual > :first-child { stroke: #1a7f37 !important; fill: #dcfce7 !important; }
+.ote-task-error    .djs-visual > :first-child { stroke: #cf222e !important; fill: #fee2e2 !important; }
+.ote-task-running  .djs-visual > :first-child { stroke: #0969da !important; fill: #dbeafe !important; }
+.ote-task-skipped  .djs-visual > :first-child { stroke: #57606a !important; fill: #f3f4f6 !important; }
+.ote-task-pending  .djs-visual > :first-child { stroke: #9a6700 !important; fill: #fff8e0 !important; }
+
+/* bpmn-js sequence flow highlight classes */
+.ote-flow-done .djs-visual path  { stroke: #1a7f37 !important; stroke-width: 2.5px !important; }
+.ote-flow-done .djs-visual       { marker-end: none; }
+.ote-flow-error .djs-visual path { stroke: #cf222e !important; stroke-width: 2.5px !important; }
+.ote-flow-skipped .djs-visual path { stroke: #57606a !important; stroke-width: 2px !important; stroke-dasharray: 5 3 !important; }
+
+/* selected element (task or gateway) */
+.ote-flow-selected .djs-visual > :first-child { stroke: #0969da !important; stroke-width: 2.5px !important; }
+.ote-flow-selected .djs-visual path           { stroke: #0969da !important; stroke-width: 2.5px !important; }
